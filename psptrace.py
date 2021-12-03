@@ -21,6 +21,7 @@ import pickle
 import csv
 import sys
 import argparse
+import json
 
 from signal import signal, SIGPIPE, SIG_DFL
 from collections import deque
@@ -710,6 +711,38 @@ def display_overview(read_accesses):
     print(t.get_string(fields=fields))
 
 
+def display_overview_json(read_accesses):
+    entry_types = Entry.DIRECTORY_ENTRY_TYPES
+    basic_fields = ['No.', 'Lowest access', 'Range', 'Type', 'Info']
+
+    overview_read_accesses = get_overview_read_accesses(read_accesses)
+    data = []
+
+    for k, v in sorted(overview_read_accesses.items()):
+        size = v['highest_access'] - v['lowest_access']
+
+        # Improve output of type # todo: remove code duplicate
+        if v['type'] is None:
+            v['type'] = 'Unknown area'
+        elif v['type'] in entry_types:
+            v['type'] = entry_types[v['type']]
+        elif type(v['type']) == int:
+            v['type'] = hex(v['type'])
+
+        v['info'] = ' '.join(v['info'])
+        row = {
+            "no": v['instr_index'],
+            "lowestAccess": '0x%.6x' % v['lowest_access'],
+            "size": '0x%.6x' % size,
+            "type": v['type'],
+            "info": v['info'],
+        }
+
+        data.append(row)
+
+    print(json.dumps(data))
+
+
 def display_read_accesses(read_accesses):
     # display results
     basic_fields = ['No.', 'Address', 'Size', 'Type', 'Info']
@@ -771,6 +804,8 @@ def main():
     parser.add_argument('romfile', help='ROM file of SPI contents')
     parser.add_argument('-o', '--overview-mode', help='aggregate accesses to the same firmware entry',
                         action='store_true')
+    parser.add_argument('-j', '--overview-json', help='aggregate accesses to the same firmware entry to json',
+                        action='store_true')
     parser.add_argument('-n', '--no-duplicates', help='hide duplicate accesses (e.g. caused by multiple PSPs)',
                         action='store_true')
     parser.add_argument('-c', '--collapse', help='collapse consecutive reads to the same PSP entry type (denoted by '
@@ -801,6 +836,10 @@ def main():
 
     if args.overview_mode:
         display_overview(read_accesses)
+        return
+
+    if args.overview_json:
+        display_overview_json(read_accesses)
         return
 
     if args.no_duplicates:
