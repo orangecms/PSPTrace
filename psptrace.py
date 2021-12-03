@@ -269,20 +269,20 @@ def get_database(csvfile):
     database_file = csvfile + '.pickle'
 
     if os.path.exists(database_file):
-        print('Info: Found existing database in %s.' % database_file)
-        print('Info: Loading database ...')
+        print('Info: Found existing database in %s.' % database_file, file=sys.stderr)
+        print('Info: Loading database ...', file=sys.stderr)
 
         with open(database_file, 'rb') as f:
             data = pickle.load(f)
 
         # (imperfect) check if this database is complete and up to date
         if 'raw' in data and 'read_accesses' in data:
-            print('Info: Loaded a capture of %d rows.' % len(data['raw']['time']))
+            print('Info: Loaded a capture of %d rows.' % len(data['raw']['time']), file=sys.stderr)
             return data
         else:
-            print('Info: Loaded database is incomplete or outdated!')
+            print('Info: Loaded database is incomplete or outdated!', file=sys.stderr)
 
-    print('Info: Creating database in %s ...' % database_file)
+    print('Info: Creating database in %s ...' % database_file, file=sys.stderr)
 
     with open(csvfile, newline='') as csvfile:
         reader = csv.DictReader(csvfile, delimiter=',')
@@ -335,7 +335,7 @@ def get_database(csvfile):
     with open(database_file, 'wb') as f:
         pickle.dump(data, f)
 
-    print('Info: Parsed and stored a database of %d rows.' % len(data['raw']['time']))
+    print('Info: Parsed and stored a database of %d rows.' % len(data['raw']['time']), file=sys.stderr)
 
     return data
 
